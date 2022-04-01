@@ -137,14 +137,15 @@ def parse_message(message):
         if (UNFURL.lower() == "false"):
             data['unfurl_link'] = 'false'
             # logging.debug(data)
-        send_message = requests.post("https://slack.com/api/chat.postMessage", data=data)
+        send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
     elif is_team_join(m) or is_debug_channel_join(m) or welcome_me(m):
         user_id = m["user"]["id"] if is_team_join(m) else m["user"]
         getdata = {
                 'token': TOKEN,
                 'users': user_id
                 }
-        userdata = requests.get("https://slack.com/api/conversations.open", params=getdata)
+        getdata.pop('token')  # fails if present (for non legacy token)
+        userdata = requests.get("https://slack.com/api/conversations.open", params=getdata, headers={"Authorization": "Bearer " + TOKEN})
         userdata = userdata.json()
         # logging.debug(userdata)
         dmchannel = userdata["channel"]["id"]
@@ -158,7 +159,7 @@ def parse_message(message):
         if (UNFURL.lower() == "false"):
             data['unfurl_link'] = 'false'
             # logging.debug(data)
-        send_message = requests.post("https://slack.com/api/chat.postMessage", data=data)
+        send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
     elif is_message(m) and 'files' in m.keys():
         ret = None
         #logging.debug(m)
@@ -205,7 +206,7 @@ def parse_message(message):
                                     'parse': 'full',
                                     'as_user': 'true',
                             }
-                            send_message = requests.post("https://slack.com/api/chat.postMessage", data=data)
+                            send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
                             # logging.debug(send_message)
                             return
                         f_args = [displayname, channel_name, final_URL]
@@ -238,7 +239,7 @@ def parse_message(message):
                         'parse': 'full',
                         'as_user': 'true',
                 }
-                send_message = requests.post("https://slack.com/api/chat.postMessage", data=data)
+                send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
                 # logging.debug(send_message)
 
 
@@ -267,7 +268,8 @@ def request_display_name(user_id):
             'token': TOKEN,
             'user': user_id
             }
-    userdata = requests.get("https://slack.com/api/users.info", params=udata)
+    udata.pop('token')  # fails if present (for non legacy token)
+    userdata = requests.get("https://slack.com/api/users.info", params=udata, headers={"Authorization": "Bearer " + TOKEN})
     userdata = userdata.json()
     # logging.debug(userdata)
     return(userdata['user']['profile']['display_name'])
@@ -288,7 +290,8 @@ def request_channel_name(channel_id):
             'token': TOKEN,
             'channel': channel_id
             }
-    channeldata = requests.get("https://slack.com/api/conversations.info", params=cdata)
+    cdata.pop('token')  # fails if present (for non legacy token)
+    channeldata = requests.get("https://slack.com/api/conversations.info", params=cdata, headers={"Authorization": "Bearer " + TOKEN})
     channeldata = channeldata.json()
     try:
         channel_name = channeldata['channel']['name']
@@ -299,7 +302,7 @@ def request_channel_name(channel_id):
 
 # Connects to Slacks and initiates socket handshake
 def start_rtm():
-    r = requests.get("https://slack.com/api/rtm.connect?token="+TOKEN)
+    r = requests.get("https://slack.com/api/rtm.connect", headers={"Authorization": "Bearer " + TOKEN})
     r = r.json()
     # logging.debug(r)
     r = r["url"]
