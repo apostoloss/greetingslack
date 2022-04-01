@@ -232,6 +232,7 @@ def parse_message(message):
 
             if ret:
                 ret = ret.replace('@', '')
+                # logging.debug(m)
                 data = {
                         'token': TOKEN,
                         'channel': m['channel'],
@@ -239,6 +240,10 @@ def parse_message(message):
                         'parse': 'full',
                         'as_user': 'true',
                 }
+                try:
+                    data['thread_ts'] = m['thread_ts']
+                except KeyError:
+                    pass
                 send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
                 # logging.debug(send_message)
 
