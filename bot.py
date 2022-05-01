@@ -206,6 +206,12 @@ def parse_message(message):
                                     'parse': 'full',
                                     'as_user': 'true',
                             }
+                            try:
+                                data['thread_ts'] = m['thread_ts']
+                                reply_settings = { 'reply_broadcast' : 'true' }
+                                data.update(reply_settings)
+                            except (KeyError, NameError):
+                                pass
                             send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
                             # logging.debug(send_message)
                             return
@@ -223,6 +229,7 @@ def parse_message(message):
             f_args = [displayname, channel_name, m['text']]
             if cmd == '!quote':
                 ret = quote_api().get_quote(*f_args)
+                reply_settings = { 'reply_broadcast' : 'true' }
             elif cmd == '!add':
                 ret = quote_api().addtodb(*f_args)
 
@@ -232,7 +239,7 @@ def parse_message(message):
 
             if ret:
                 ret = ret.replace('@', '')
-                # logging.debug(m)
+                logging.debug(m)
                 data = {
                         'token': TOKEN,
                         'channel': m['channel'],
@@ -243,6 +250,10 @@ def parse_message(message):
                 try:
                     data['thread_ts'] = m['thread_ts']
                 except KeyError:
+                    pass
+                try:
+                    data.update(reply_settings)
+                except NameError:
                     pass
                 send_message = requests.post("https://slack.com/api/chat.postMessage", data=data, headers={"Authorization": "Bearer " + TOKEN})
                 # logging.debug(send_message)
